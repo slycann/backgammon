@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backgammon</title>
+<style>
+  :root {
+    --bg: #f4efe6;
+    --text: #2b2118;
+    --muted: #7a6a58;
+    --panel: #fffaf2;
+    --border: #d9cbb6;
+    --frame: #6b4423;
+    --frame-text: #f1dfc4;
+    --field: #2f5d3a;
+    --tri-a: #e8d3ad;
+    --tri-b: #a8432f;
+    --bar: #5a3a1e;
+    --tray: #4a3019;
+    --white-checker: #fbf7ee;
+    --white-edge: #b9a888;
+    --black-checker: #2a2622;
+    --black-edge: #6b625a;
+    --accent: #f2b632;
+    --target: rgba(242, 182, 50, 0.55);
+    --die-white: #fffdf8;
+    --die-white-pip: #2b2118;
+    --die-black: #2a2622;
+    --die-black-pip: #f6efe2;
+    --btn: #2f5d3a;
+    --btn-text: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f;
+      --text: #efe6d8;
+      --muted: #a8998a;
+      --panel: #221d17;
+      --border: #3c342a;
+      --frame: #4a2f19;
+      --frame-text: #d9c3a3;
+      --field: #1f3f28;
+      --tri-a: #c9b28a;
+      --tri-b: #8e3726;
+      --bar: #3d2714;
+      --tray: #33210f;
+      --btn: #3f7a4e;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f;
+    --text: #efe6d8;
+    --muted: #a8998a;
+    --panel: #221d17;
+    --border: #3c342a;
+    --frame: #4a2f19;
+    --frame-text: #d9c3a3;
+    --field: #1f3f28;
+    --tri-a: #c9b28a;
+    --tri-b: #8e3726;
+    --bar: #3d2714;
+    --tray: #33210f;
+    --btn: #3f7a4e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { margin: 0 0 8px; font-size: 1.6rem; letter-spacing: 0.01em; }
+  .score { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .score b { color: var(--text); }
+  svg#board { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  .frame { fill: var(--frame); }
+  .field { fill: var(--field); }
+  .barstrip { fill: var(--bar); }
+  .tray { fill: var(--tray); }
+  .tri-a { fill: var(--tri-a); }
+  .tri-b { fill: var(--tri-b); }
+  .ptnum { fill: var(--frame-text); font-size: 12px; text-anchor: middle; font-weight: 600; }
+  .chk-w { fill: var(--white-checker); stroke: var(--white-edge); stroke-width: 2; }
+  .chk-b { fill: var(--black-checker); stroke: var(--black-edge); stroke-width: 2; }
+  .chk-inner { fill: none; stroke-width: 1.5; opacity: 0.35; }
+  .chk-w + .chk-inner { stroke: var(--white-edge); }
+  .chk-b + .chk-inner { stroke: var(--black-edge); }
+  .count { font-size: 18px; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .count-w { fill: var(--black-checker); }
+  .count-b { fill: var(--white-checker); }
+  .off-w { fill: var(--white-checker); stroke: var(--white-edge); }
+  .off-b { fill: var(--black-checker); stroke: var(--black-edge); }
+  .movable { fill: none; stroke: var(--accent); stroke-width: 3; stroke-dasharray: 6 5; }
+  .selected { fill: none; stroke: var(--accent); stroke-width: 5; }
+  .lastmove { fill: none; stroke: #6fb3ff; stroke-width: 3; }
+  .target { fill: var(--target); stroke: var(--accent); stroke-width: 3; }
+  .target-zone { fill: var(--target); }
+  .hit { fill: transparent; cursor: pointer; }
+  .die rect { stroke-width: 1.5; }
+  .die-w rect { fill: var(--die-white); stroke: #b9a888; }
+  .die-w circle { fill: var(--die-white-pip); }
+  .die-b rect { fill: var(--die-black); stroke: #6b625a; }
+  .die-b circle { fill: var(--die-black-pip); }
+  .die.used { opacity: 0.3; }
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+  button, select {
+    font: inherit; border-radius: 10px; padding: 9px 16px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+  }
+  button.primary { background: var(--btn); color: var(--btn-text); border-color: transparent; font-weight: 600; min-width: 120px; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .spacer { flex: 1; }
+  .status {
+    margin-top: 12px; padding: 12px 14px; border-radius: 12px;
+    background: var(--panel); border: 1px solid var(--border);
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  #msg { font-weight: 600; }
+  #pips { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .help { color: var(--muted); font-size: 0.9rem; margin-top: 14px; }
+  .help summary { cursor: pointer; }
+  label { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Backgammon</h1>
+    <div class="score" id="score"></div>
+  </header>
+
+  <svg id="board" viewBox="0 0 920 680" role="img" aria-label="Backgammon board"></svg>
+
+  <div class="status">
+    <span id="msg"></span>
+    <span id="pips"></span>
+  </div>
+
+  <div class="controls">
+    <button class="primary" id="primary">Roll</button>
+    <button id="undo">Undo</button>
+    <span class="spacer"></span>
+    <label for="level">Computer</label>
+    <select id="level">
+      <option value="easy">Easy</option>
+      <option value="medium" selected>Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+    <button id="newgame">New game</button>
+  </div>
+
+  <details class="help">
+    <summary>How to play</summary>
+    <p>You play white and move counter‑clockwise toward your home board in the bottom right, then bear off into the tray.
+      Click a checker with a dashed ring to pick it up, then click a highlighted spot to move it. You can move one checker
+      with both dice in one go if the combined spot is highlighted. Undo takes back your moves until you end your turn.</p>
+    <p>Keyboard: <b>Space</b> rolls or ends your turn, <b>U</b> undoes. A gammon (opponent bore off none) counts 2 points, a backgammon 3.</p>
+  </details>
+</main>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
